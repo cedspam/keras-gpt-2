@@ -90,14 +90,23 @@ def get_model(n_vocab,
     :param fixed_input_shape: Whether the length of input is fixed. (Needed for TPU training)
     :return: The model.
     """
-    if fixed_input_shape:
-        input_layer_shape = (batch_size, n_ctx)
+    if batch_size is not None:
+        # Use batch_shape when batch_size is specified
+        if fixed_input_shape:
+            input_layer_shape = (batch_size, n_ctx)
+        else:
+            input_layer_shape = (batch_size, None)
+        input_layer = keras.layers.Input(
+            batch_shape=input_layer_shape,
+            name='Input',
+        )
     else:
-        input_layer_shape = (batch_size, None)
-    input_layer = keras.layers.Input(
-        batch_shape=input_layer_shape,
-        name='Input',
-    )
+        # Use shape when batch_size is not specified
+        if fixed_input_shape:
+            input_layer_shape = (n_ctx,)
+        else:
+            input_layer_shape = (None,)
+        input_layer = keras.layers.Input(shape=input_layer_shape, name='Input')
 
     embed_token, embeddings = EmbeddingRet(
         input_dim=n_vocab,
